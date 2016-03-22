@@ -1,0 +1,23 @@
+EECS 467 Task 1 Todo
+
+D Implement handler functions to be able to recieve messages
+D Getters for handler class
+D Update functions to read from handler class and update Rexarm struct
+D void are we there yet fxn (rexarm, handler)
+-D while 1
+-D get status 
+-D abs(status - current) <= 0.05 then break
+D determine order of moving the servos
+D tuning to not hit balls
+-D should we go a little bit left of ball?
+D order of operations, handling turns, etc
+D Probably should have a timeout
+-D vector of twenty statuses where is abs(diff(s0 - s9)) >= 0.05 we prob are there
+--D bool resend if we arent close enough?? while (resend) lcm.publish
+-D Have an issue where status.radians is exactly PI (or really really close)
+--D PI - 0 is always gonna be too big of a diff
+- Handle and respond to messages
+- wrist tilt for spots that are hard to reach
+- individual theta update functions
+- who's turn is it?
+- State struct?? What am I doing right now?
