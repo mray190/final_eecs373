@@ -62,13 +62,13 @@ class maebot_targeting_laser_command_t
         inline int _encodeNoHash(void *buf, int offset, int maxlen) const;
         inline int _getEncodedSizeNoHash() const;
         inline int _decodeNoHash(const void *buf, int offset, int maxlen);
-        inline static uint64_t _computeHash(const __lcm_hash_ptr *p);
+        inline static int64_t _computeHash(const __lcm_hash_ptr *p);
 };
 
 int maebot_targeting_laser_command_t::encode(void *buf, int offset, int maxlen) const
 {
     int pos = 0, tlen;
-    int64_t hash = (int64_t)getHash();
+    int64_t hash = getHash();
 
     tlen = __int64_t_encode_array(buf, offset + pos, maxlen - pos, &hash, 1);
     if(tlen < 0) return tlen; else pos += tlen;
@@ -144,9 +144,9 @@ int maebot_targeting_laser_command_t::_getEncodedSizeNoHash() const
     return enc_size;
 }
 
-uint64_t maebot_targeting_laser_command_t::_computeHash(const __lcm_hash_ptr *)
+int64_t maebot_targeting_laser_command_t::_computeHash(const __lcm_hash_ptr *)
 {
-    uint64_t hash = 0x3b34ecb0d057173eLL;
+    int64_t hash = 0x3b34ecb0d057173eLL;
     return (hash<<1) + ((hash>>63)&1);
 }
 

@@ -1,5 +1,36 @@
-#ifndef __ZHASH_H__
-#define __ZHASH_H__
+/* (C) 2013-2015, The Regents of The University of Michigan
+All rights reserved.
+
+This software may be available under alternative licensing
+terms. Contact Edwin Olson, ebolson@umich.edu, for more information.
+
+   Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+The views and conclusions contained in the software and documentation are those
+of the authors and should not be interpreted as representing official policies,
+either expressed or implied, of the FreeBSD Project.
+ */
+
+#ifndef _ZHASH_H
+#define _ZHASH_H
 
 #include <stdint.h>
 
@@ -9,8 +40,6 @@ extern "C" {
 
 #include "zarray.h"
 
-
-// XXX const-ness
 
 /**
  * A hash table for structs and primitive types that stores entries by value.
@@ -24,15 +53,28 @@ extern "C" {
  *     user defined structs
  *     Note: if zhash stores pointers, user must be careful to manually manage the lifetime
  *     of the memory they point to.
- **/
+ *
+ * If a zhash stores pointers, it is not possible for this interface to prevent
+ * "deep" modifications, even when a const zhash_t* is used. In this case, the
+ * user should infer the intention of the function from the const-ness of the
+ * zhash_t*. It is a violation of the intention of a function to perform
+ * "deep" modifications to zhash data via a const zhash_t* (i.e. via
+ * zhash_get() and zhash_get_volatile(), zhash_iterator_init_const(),
+ * zhash_keys(), zhash_values(), etc).
+ * Functions which have a non-const zhash_t* intend the possibility of deep
+ * modifications (i.e. zhash_put(), zhash_remove(), zhash_clear(),
+ * zhash_[v]map_[values|keys](), zhash_iterator_init(), etc).
+ */
 
 typedef struct zhash zhash_t;
 
 // The contents of the iterator should be considered private. However,
 // since our usage model prefers stack-based allocation of iterators,
 // we must publicly declare them.
-struct zhash_iterator {
+struct zhash_iterator
+{
     zhash_t *zh;
+    const zhash_t *czh;
 
     // these point to the next bucket/bucket-entry to be examined.
     int bucket;
@@ -50,10 +92,9 @@ typedef struct zhash_iterator zhash_iterator_t;
  * I.e. if keysz = sizeof(uint64_t), then hash() and equals() should accept
  * parameters as *uint64_t.
  */
-zhash_t *
-zhash_create (size_t keysz, size_t valuesz,
-              uint32_t(*hash)(const void *a),
-              int(*equals)(const void *a, const void *b));
+zhash_t *zhash_create(size_t keysz, size_t valuesz,
+                      uint32_t(*hash)(const void *a),
+                      int(*equals)(const void *a, const void *b));
 
 /**
  * Frees all resources associated with the hash table structure which was
@@ -62,18 +103,16 @@ zhash_create (size_t keysz, size_t valuesz,
  * If 'zh' contains pointer data, it is the caller's responsibility to manage
  * the resources pointed to by those pointers.
  */
-void
-zhash_destroy (zhash_t *zh);
+void zhash_destroy(zhash_t *zh);
 
 /**
- * Creates and returns a new identical copy of the zhash.
+ * Creates and returns a new identical copy of the zhash (i.e. a "shallow" copy).
  * If you're storing pointers, be sure not to double free their pointees!
  * It is the caller's responsibility to call zhash_destroy() on the returned array
  * when it is no longer needed (in addition to the zhash_destroy() call for the
  * original zhash).
  */
-zhash_t *
-zhash_copy (zhash_t *other);
+zhash_t * zhash_copy(const zhash_t* other);
 
 /**
  * Determines whether the supplied key value exists as an entry in the zhash
@@ -81,8 +120,7 @@ zhash_copy (zhash_t *other);
  * between a non-existent key and a key mapped to NULL.
  * Returns 1 if the supplied key exists in the zhash table, else 0.
  */
-int
-zhash_contains (const zhash_t *zh, const void *key);
+int zhash_contains(const zhash_t *zh, const void *key);
 
 /**
  * Retrieves the value for the given key, if it exists, by copying its contents
@@ -90,8 +128,7 @@ zhash_contains (const zhash_t *zh, const void *key);
  * Returns 1 if the supplied key exists in the table, else 0, in which case
  * the contents of 'out_value' will be unchanged.
  */
-int
-zhash_get (const zhash_t *zh, const void *key, void *out_value);
+int zhash_get(const zhash_t *zh, const void *key, void *out_value);
 
 /**
  * Similar to zhash_get(), but more dangerous. Provides a pointer to the zhash's
@@ -104,8 +141,7 @@ zhash_get (const zhash_t *zh, const void *key, void *out_value);
  * 'out_p' should be a pointer to the pointer which will be set to the internal
  * data address.
  */
-int
-zhash_get_volatile (const zhash_t *zh, const void *key, void *out_p);
+int zhash_get_volatile(const zhash_t *zh, const void *key, void *out_p);
 
 /**
  * Adds a key/value pair to the hash table, if the supplied key does not already
@@ -143,8 +179,7 @@ zhash_get_volatile (const zhash_t *zh, const void *key, void *out_p);
  * which case the data pointed to by 'oldkey' and 'oldvalue' will be set to zero
  * if they are not NULL.
  */
-int
-zhash_put (zhash_t *zh, const void *key, const void *value, void *oldkey, void *oldvalue);
+int zhash_put(zhash_t *zh, const void *key, const void *value, void *oldkey, void *oldvalue);
 
 /**
  * Removes from the zhash table the key/value pair for the supplied key, if
@@ -156,26 +191,44 @@ zhash_put (zhash_t *zh, const void *key, const void *value, void *oldkey, void *
  * Returns 1 if the key existed and was removed, else 0, indicating that the
  * table contents were not changed.
  */
-int
-zhash_remove (zhash_t *zh, const void *key, void *oldkey, void *oldvalue);
+int zhash_remove(zhash_t *zh, const void *key, void *oldkey, void *oldvalue);
+
+/**
+ * Removes all entries in the has table to create the equivalent of starting from
+ * a zhash_create(), using the same size parameters. If any elements need to be
+ * freed manually, this will need to occur before calling clear.
+ */
+void zhash_clear(zhash_t *zh);
 
 /**
  * Retrieves the current number of key/value pairs currently contained in the
  * zhash table, or 0 if the table is empty.
  */
-int
-zhash_size (const zhash_t *zh);
+int zhash_size(const zhash_t *zh);
+
+/**
+ * Initializes an iterator which can be used to traverse the key/value pairs of
+ * the supplied zhash table via successive calls to zhash_iterator_next() or
+ * zhash_iterator_next_volatile(). The iterator can also be used to remove elements
+ * from the zhash with zhash_iterator_remove().
+ *
+ * Any modifications to the zhash table structure will invalidate the
+ * iterator, with the exception of zhash_iterator_remove().
+ */
+void zhash_iterator_init(zhash_t *zh, zhash_iterator_t *zit);
 
 /**
  * Initializes an iterator which can be used to traverse the key/value pairs of
  * the supplied zhash table via successive calls to zhash_iterator_next() or
  * zhash_iterator_next_volatile().
  *
+ * An iterator initialized with this function cannot be used with
+ * zhash_iterator_remove(). For that you must use zhash_iterator_init().
+ *
  * Any modifications to the zhash table structure will invalidate the
- * iterator, with the exception of zhash_iterator_remove().
+ * iterator.
  */
-void
-zhash_iterator_init (zhash_t *zh, zhash_iterator_t *zit);
+void zhash_iterator_init_const(const zhash_t *zh, zhash_iterator_t *zit);
 
 /**
  * Retrieves the next key/value pair from a zhash table via the (previously-
@@ -186,8 +239,7 @@ zhash_iterator_init (zhash_t *zh, zhash_iterator_t *zit);
  * indicating that no entries remain, in which case the contents of outkey and
  * outvalue will remain unchanged.
  */
-int
-zhash_iterator_next (zhash_iterator_t *zit, void *outkey, void *outvalue);
+int zhash_iterator_next(zhash_iterator_t *zit, void *outkey, void *outvalue);
 
 /**
  * Similar to zhash_iterator_next() except that it retrieves a pointer to zhash's
@@ -207,16 +259,17 @@ zhash_iterator_next (zhash_iterator_t *zit, void *outkey, void *outvalue);
  * indicating that no entries remain, in which case the pointers outkey and
  * outvalue will remain unchanged.
  */
-int
-zhash_iterator_next_volatile (zhash_iterator_t *zit, void *outkey, void *outvalue);
+int zhash_iterator_next_volatile(zhash_iterator_t *zit, void *outkey, void *outvalue);
 
 /**
  * Removes from the zhash table the key/value pair most recently returned via
  * a call to zhash_iterator_next() or zhash_iterator_next_volatile() for the
  * supplied iterator.
+ *
+ * Requires that the iterator was initialized with zhash_iterator_init(),
+ * not zhash_iterator_init_const().
  */
-void
-zhash_iterator_remove (zhash_iterator_t *zit);
+void zhash_iterator_remove(zhash_iterator_t *zit);
 
 /**
  * Calls the supplied function with a pointer to every key in the hash table in
@@ -224,8 +277,7 @@ zhash_iterator_remove (zhash_iterator_t *zit);
  * for the key, which the caller should not modify, as the hash table will not be
  * re-indexed. The function may be NULL, in which case no action is taken.
  */
-void
-zhash_map_keys (zhash_t *zh, void (*f)());
+void zhash_map_keys(zhash_t *zh, void (*f)());
 
 /**
  * Calls the supplied function with a pointer to every value in the hash table in
@@ -233,8 +285,7 @@ zhash_map_keys (zhash_t *zh, void (*f)());
  * for the value, which the caller may safely modify. The function may be NULL,
  * in which case no action is taken.
  */
-void
-zhash_map_values (zhash_t *zh, void (*f)());
+void zhash_map_values(zhash_t *zh, void (*f)());
 
 /**
  * Calls the supplied function with a copy of every key in the hash table in
@@ -247,8 +298,7 @@ zhash_map_values (zhash_t *zh, void (*f)());
  * Use with non-pointer keys (i.e. integer, double, etc.) will likely cause a
  * segmentation fault.
  */
-void
-zhash_vmap_keys (zhash_t *vh, void (*f)());
+void zhash_vmap_keys(zhash_t *vh, void (*f)());
 
 /**
  * Calls the supplied function with a copy of every value in the hash table in
@@ -261,52 +311,45 @@ zhash_vmap_keys (zhash_t *vh, void (*f)());
  * Use with non-pointer values (i.e. integer, double, etc.) will likely cause a
  * segmentation fault.
  */
-void
-zhash_vmap_values (zhash_t *vh, void (*f)());
+void zhash_vmap_values(zhash_t *vh, void (*f)());
 
 /**
- * Returns an array which contains copis of all of the hash table's keys, in no
+ * Returns an array which contains copies of all of the hash table's keys, in no
  * particular order. It is the caller's responsibility to call zarray_destroy()
  * on the returned structure when it is no longer needed.
  */
-zarray_t *
-zhash_keys (zhash_t *zh);
+zarray_t *zhash_keys(const zhash_t *zh);
 
 /**
- * Returns an array which contains copis of all of the hash table's values, in no
+ * Returns an array which contains copies of all of the hash table's values, in no
  * particular order. It is the caller's responsibility to call zarray_destroy()
  * on the returned structure when it is no longer needed.
  */
-zarray_t *
-zhash_values (zhash_t *zh);
+zarray_t *zhash_values(const zhash_t *zh);
 
 /**
  * Defines a hash function which will calculate a zhash value for uint32_t input
  * data. Can be used with zhash_create() for a key size of sizeof(uint32_t).
  */
-uint32_t
-zhash_uint32_hash (const void *a);
+uint32_t zhash_uint32_hash(const void *a);
 
 /**
  * Defines a function to compare zhash values for uint32_t input data.
  * Can be used with zhash_create() for a key size of sizeof(uint32_t).
  */
-int
-zhash_uint32_equals (const void *a, const void *b);
+int zhash_uint32_equals(const void *a, const void *b);
 
 /**
  * Defines a hash function which will calculate a zhash value for uint64_t input
  * data. Can be used with zhash_create() for a key size of sizeof(uint64_t).
  */
-uint32_t
-zhash_uint64_hash (const void *a);
+uint32_t zhash_uint64_hash(const void *a);
 
 /**
  * Defines a function to compare zhash values for uint64_t input data.
  * Can be used with zhash_create() for a key size of sizeof(uint64_t).
  */
-int
-zhash_uint64_equals (const void *a, const void *b);
+int zhash_uint64_equals(const void *a, const void *b);
 
 /////////////////////////////////////////////////////
 // functions for keys that can be compared via their pointers.
@@ -315,15 +358,13 @@ zhash_uint64_equals (const void *a, const void *b);
  * data. Can be used with zhash_create() for a key size of sizeof(void*). Will
  * use only the pointer value itself for computing the hash value.
  */
-uint32_t
-zhash_ptr_hash (const void *a);
+uint32_t zhash_ptr_hash(const void *a);
 
 /**
  * Defines a function to compare zhash values for pointer input data.
  * Can be used with zhash_create() for a key size of sizeof(void*).
  */
-int
-zhash_ptr_equals (const void *a, const void *b);
+int zhash_ptr_equals(const void *a, const void *b);
 
 /////////////////////////////////////////////////////
 // Functions for string-typed keys
@@ -332,19 +373,17 @@ zhash_ptr_equals (const void *a, const void *b);
  * data. Can be used with zhash_create() for a key size of sizeof(char*). Will
  * use the contents of the string in computing the hash value.
  */
-uint32_t
-zhash_str_hash (const void *a);
+uint32_t zhash_str_hash(const void *a);
 
 /**
  * Defines a function to compare zhash values for string input data.
  * Can be used with zhash_create() for a key size of sizeof(char*).
  */
-int
-zhash_str_equals (const void *a, const void *b);
+int zhash_str_equals(const void *a, const void *b);
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif //__ZHASH_H__
+#endif

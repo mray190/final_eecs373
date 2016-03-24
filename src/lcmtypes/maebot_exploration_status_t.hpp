@@ -24,15 +24,7 @@ class maebot_exploration_status_t
         maebot_pose_t frontier_target;
 
     public:
-        // If you're using C++11 and are getting compiler errors saying things like
-        // ‘constexpr’ needed for in-class initialization of static data member
-        // then re-run lcm-gen with '--cpp-std=c++11' to generate code that is
-        // compliant with C++11
         static const int8_t   EXPLORING = 1;
-        // If you're using C++11 and are getting compiler errors saying things like
-        // ‘constexpr’ needed for in-class initialization of static data member
-        // then re-run lcm-gen with '--cpp-std=c++11' to generate code that is
-        // compliant with C++11
         static const int8_t   COMPLETE = 2;
 
     public:
@@ -79,13 +71,13 @@ class maebot_exploration_status_t
         inline int _encodeNoHash(void *buf, int offset, int maxlen) const;
         inline int _getEncodedSizeNoHash() const;
         inline int _decodeNoHash(const void *buf, int offset, int maxlen);
-        inline static uint64_t _computeHash(const __lcm_hash_ptr *p);
+        inline static int64_t _computeHash(const __lcm_hash_ptr *p);
 };
 
 int maebot_exploration_status_t::encode(void *buf, int offset, int maxlen) const
 {
     int pos = 0, tlen;
-    int64_t hash = (int64_t)getHash();
+    int64_t hash = getHash();
 
     tlen = __int64_t_encode_array(buf, offset + pos, maxlen - pos, &hash, 1);
     if(tlen < 0) return tlen; else pos += tlen;
@@ -175,7 +167,7 @@ int maebot_exploration_status_t::_getEncodedSizeNoHash() const
     return enc_size;
 }
 
-uint64_t maebot_exploration_status_t::_computeHash(const __lcm_hash_ptr *p)
+int64_t maebot_exploration_status_t::_computeHash(const __lcm_hash_ptr *p)
 {
     const __lcm_hash_ptr *fp;
     for(fp = p; fp != NULL; fp = fp->parent)
@@ -183,7 +175,7 @@ uint64_t maebot_exploration_status_t::_computeHash(const __lcm_hash_ptr *p)
             return 0;
     const __lcm_hash_ptr cp = { p, (void*)maebot_exploration_status_t::getHash };
 
-    uint64_t hash = 0xb3877bc6e73cbca2LL +
+    int64_t hash = 0xb3877bc6e73cbca2LL +
          maebot_pose_t::_computeHash(&cp);
 
     return (hash<<1) + ((hash>>63)&1);

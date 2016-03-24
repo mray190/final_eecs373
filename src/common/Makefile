@@ -8,22 +8,32 @@ LIB_COMMON = $(LIB_PATH)/libcommon.a
 LIBCOMMON_OBJS = \
 	c5.o \
 	config.o \
+	encode_bytes.o \
 	getopt.o \
+	homography.o \
+	io_util.o \
 	ioutils.o \
-        param_widget.o \
+	matd.o \
+       param_widget.o \
 	pg.o \
 	serial.o \
+	serial_util.o \
 	ssocket.o \
 	string_util.o \
+	svd22.o \
 	task_thread.o \
 	timespec.o \
 	timestamp.o \
+	time_util.o \
 	timesync.o \
+	unionfind.o \
 	url_parser.o \
 	varray.o \
 	vhash.o \
+	workerpool.o \
 	zarray.o \
-	zhash.o
+	zhash.o \
+	zmaxheap.o
 
 all: $(LIB_COMMON)
 
