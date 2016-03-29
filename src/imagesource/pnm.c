@@ -1,56 +1,25 @@
-/* (C) 2013-2015, The Regents of The University of Michigan
-All rights reserved.
-
-This software may be available under alternative licensing
-terms. Contact Edwin Olson, ebolson@umich.edu, for more information.
-
-   Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-The views and conclusions contained in the software and documentation are those
-of the authors and should not be interpreted as representing official policies,
-either expressed or implied, of the FreeBSD Project.
- */
-
-#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <assert.h>
 #include "pnm.h"
 
-pnm_t *pnm_create_from_file(const char *path)
+pnm_t *
+pnm_create_from_file (const char *path)
 {
-    FILE *f = fopen(path, "rb");
+    pnm_t *pnm = calloc (1, sizeof(*pnm));
+    pnm->format = -1;
+
+    FILE *f = fopen (path, "rb");
     if (f == NULL)
         return NULL;
-
-    pnm_t *pnm = calloc(1, sizeof(pnm_t));
-    pnm->format = -1;
 
     char tmp[1024];
     int nparams = 0; // will be 3 when we're all done.
     int params[3];
 
     while (nparams < 3) {
-        if (fgets(tmp, sizeof(tmp), f) == NULL)
+        if (fgets (tmp, sizeof(tmp), f) == NULL)
             goto error;
 
         // skip comments
@@ -61,7 +30,7 @@ pnm_t *pnm_create_from_file(const char *path)
 
         if (pnm->format == -1 && tmp[0]=='P') {
             pnm->format = tmp[1]-'0';
-            assert(pnm->format == PNM_FORMAT_GRAY || pnm->format == PNM_FORMAT_RGB);
+            assert (pnm->format==5 || pnm->format==6);
             p = &tmp[2];
         }
 
@@ -90,29 +59,29 @@ pnm_t *pnm_create_from_file(const char *path)
     assert(params[2] == 255);
 
     switch (pnm->format) {
-        case PNM_FORMAT_GRAY: {
+        case 5: {
             pnm->buflen = pnm->width * pnm->height;
-            pnm->buf = malloc(pnm->buflen);
-            size_t len = fread(pnm->buf, 1, pnm->buflen, f);
+            pnm->buf = malloc (pnm->buflen);
+            size_t len = fread (pnm->buf, 1, pnm->buflen, f);
             if (len != pnm->buflen)
                 goto error;
 
-            fclose(f);
+            fclose (f);
             return pnm;
         }
 
-        case PNM_FORMAT_RGB: {
+        case 6: {
             pnm->buflen = pnm->width * pnm->height * 3;
-            pnm->buf = malloc(pnm->buflen);
-            size_t len = fread(pnm->buf, 1, pnm->buflen, f);
+            pnm->buf = malloc (pnm->buflen);
+            size_t len = fread (pnm->buf, 1, pnm->buflen, f);
             if (len != pnm->buflen)
                 goto error;
-            fclose(f);
+            fclose (f);
             return pnm;
         }
     }
 
-error:
+  error:
     fclose(f);
 
     if (pnm != NULL) {
@@ -123,11 +92,12 @@ error:
     return NULL;
 }
 
-void pnm_destroy(pnm_t *pnm)
+void
+pnm_destroy (pnm_t *pnm)
 {
     if (pnm == NULL)
         return;
 
-    free(pnm->buf);
-    free(pnm);
+    free (pnm->buf);
+    free (pnm);
 }

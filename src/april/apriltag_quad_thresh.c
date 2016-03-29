@@ -38,12 +38,12 @@ either expressed or implied, of the FreeBSD Project.
 #include <stdio.h>
 
 #include "apriltag.h"
-#include "common/zarray.h"
-#include "common/zhash.h"
-#include "common/unionfind.h"
-#include "common/timeprofile.h"
-#include "common/zmaxheap.h"
-#include "common/postscript_utils.h"
+#include "zarray.h"
+#include "zhash.h"
+#include "unionfind.h"
+#include "timeprofile.h"
+#include "zmaxheap.h"
+#include "postscript_utils.h"
 
 /*
 static inline uint32_t u64hash_1(uint64_t x) {

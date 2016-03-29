@@ -1,35 +1,32 @@
-include ../common.mk
+CC = gcc
+AR = ar
 
-CFLAGS =   $(CFLAGS_STD)  $(CFLAGS_COMMON)  $(CFLAGS_GTK)  $(CFLAGS_USB)  $(CFLAGS_PNG)  $(CFLAGS_DC1394)
-LDFLAGS = $(LDFLAGS_STD) $(LDFLAGS_COMMON) $(LDFLAGS_GTK) $(LDFLAGS_USB) $(LDFLAGS_PNG) $(LDFLAGS_DC1394)
-LIBDEPS = $(call libdeps, $(LDFLAGS))
+CFLAGS = -std=gnu99 -Wall -Wno-unused-parameter -Wno-unused-function -pthread -I. -Icommon -O4
+LDFLAGS = -lpthread -lm
 
-LIB_APRIL = $(LIB_PATH)/libapril.a
-LIBAPRIL_OBJS = \
-	apriltag.o \
-	apriltag_quad_thresh.o \
-	tag16h5.o \
-	tag25h7.o \
-	tag25h9.o \
-	tag36h10.o \
-	tag36h11.o \
-	tag36artoolkit.o \
-	g2d.o
+APRILTAG_OBJS = apriltag.o apriltag_quad_thresh.o tag16h5.o tag25h7.o tag25h9.o tag36h10.o tag36h11.o tag36artoolkit.o g2d.o common/zarray.o common/zhash.o common/zmaxheap.o common/unionfind.o common/matd.o common/image_u8.o common/pnm.o common/image_f32.o common/image_u32.o common/workerpool.o common/time_util.o common/svd22.o common/homography.o common/string_util.o common/getopt.o
 
-BIN_DEMO= $(BIN_PATH)/apriltag_demo
+LIBAPRILTAG := libapriltag.a
 
-ALL = $(LIB_APRIL) $(BIN_DEMO)
+all: $(LIBAPRILTAG) apriltag_demo april_runner
 
-all: $(ALL)
 
-$(LIB_APRIL): $(LIBAPRIL_OBJS) $(LIBDEPS)
-	@echo "\t$@"
-	@ar rc $@ $^
+$(LIBAPRILTAG): $(APRILTAG_OBJS)
+	@echo "   [$@]"
+	@$(AR) -cq $@ $(APRILTAG_OBJS)
 
-$(BIN_DEMO): apriltag_demo.o $(LIB_APRIL) $(LIBDEPS)
-	@echo "\t$@"
-	@$(CC) -o $@ $^ $(LDFLAGS) $(LDFLAGS_IMAGESOURCE) $(LDFLAGS_COMMON) $(LDFLAGS_STD)
+apriltag_demo: apriltag_demo.o
+	@echo "   [$@]"
+	@$(CC) -o $@ apriltag_demo.o $(APRILTAG_OBJS) $(LDFLAGS)
 
+april_runner: april_runner.o
+	@echo "   [$@]"
+	@$(CC) -o $@ april_runner.o -llcm ../lcmtypes/april_tag_t.o $(APRILTAG_OBJS) $(LDFLAGS)
+
+%.o: %.c
+	@echo "   $@"
+	@$(CC) -o $@ -c $< $(CFLAGS)
+
+.PHONY: clean
 clean:
-	@rm -f *~ *.o
-	@rm -f $(ALL)
+	@rm -rf *.o common/*.o $(LIBAPRILTAG) apriltag_demo april_runner

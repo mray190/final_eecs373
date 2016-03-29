@@ -39,6 +39,8 @@ either expressed or implied, of the FreeBSD Project.
 #include <inttypes.h>
 #include <sys/time.h>
 
+#include "common/image_u8.h"
+#include "common/image_u32.h"
 #include "common/zhash.h"
 #include "common/zarray.h"
 #include "common/matd.h"

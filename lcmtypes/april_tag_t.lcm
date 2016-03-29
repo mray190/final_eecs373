@@ -1,0 +1,18 @@
+struct april_tag_t
+{
+	int32_t id;
+    float x;
+    float y;
+
+    float tl_x;
+    float tl_y;
+
+    float tr_x;
+    float tr_y;
+
+    float bl_x;
+    float bl_y;
+
+    float br_x;
+    float br_y;
+}

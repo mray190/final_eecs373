@@ -39,10 +39,9 @@
 #include "imagesource/image_convert.h"
 #include "eecs467/vx_utils.h"
 
-#include <april/apriltag.h>
-#include <april/tag36h11.h>
+#include "lcmtypes/april_tag_t.hpp"
 
-#include "lcmtypes/tic_tac_toe_turn_t.hpp"
+using namespace std;
 
 class VxWindow : public eecs467::VxGtkWindowBase {
 public:
@@ -69,6 +68,16 @@ public:
     **/
     virtual void render(void);
 
+    class Handler {
+    public:
+        Handler();
+        void handleApril(const lcm::ReceiveBuffer*,
+                    const std::string&,
+                    const april_tag_t*);
+    };
+
+    static void * april_thread (void *arg);
+
 private:
     image_source_t *isrc;
     int frameCount_;
@@ -79,6 +88,4 @@ private:
     int x0, y0, x1, y1;
     int mouse_dejitter;
     int click_count;
-
-    apriltag_detector_t *td;
 };

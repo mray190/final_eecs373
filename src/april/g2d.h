@@ -32,7 +32,7 @@ either expressed or implied, of the FreeBSD Project.
 #ifndef _G2D_H
 #define _G2D_H
 
-#include "common/zarray.h"
+#include "zarray.h"
 
 // This library tries to avoid needless proliferation of types.
 //
