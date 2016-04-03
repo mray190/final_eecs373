@@ -15,7 +15,7 @@ int VxWindow::setup() {
     char *img_url;
  	if (0==zarray_size (urls)) return -1;
     //Change the 0 to 1 to change to the overhead cameras
-	zarray_get (urls, 0, &img_url);
+	zarray_get (urls, 1, &img_url);
 
     // Set up the imagesource
     isrc = image_source_open (img_url);
@@ -48,6 +48,14 @@ VxWindow::Handler::Handler() {}
 void VxWindow::Handler::handleApril(const lcm::ReceiveBuffer* rbuf,
                             const std::string& chan,
                             const april_tag_t* msg) {
+
+    // if (hash_tag.find(msg->id)!=hash_tag.end()) {
+    //     hash_tag[msg->id] = *msg;
+    // } else {
+    //     hash_tag[msg->id].push_back(*msg);
+    // }
+
+
     cout << "(" << msg->tl_x << "," << msg->tl_y << ") (" << msg->tr_x << "," << msg->tr_y << ")\n";
     cout << "(" << msg->bl_x << "," << msg->bl_y << ") (" << msg->br_x << "," << msg->br_y << ")\n";
     cout << "ID: " << msg->id << " center: (" << msg->x << ", " << msg->y << ")\n";

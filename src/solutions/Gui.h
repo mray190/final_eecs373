@@ -41,6 +41,8 @@
 
 #include "lcmtypes/april_tag_t.hpp"
 
+#include <unordered_map>
+
 using namespace std;
 
 class VxWindow : public eecs467::VxGtkWindowBase {
@@ -78,7 +80,10 @@ public:
 
     static void * april_thread (void *arg);
 
+    static unordered_map <int, april_tag_t> hash_tag;
+
 private:
+
     image_source_t *isrc;
     int frameCount_;
 
