@@ -54,10 +54,6 @@ void VxWindow::Handler::handleApril(const lcm::ReceiveBuffer* rbuf,
     // } else {
     //     hash_tag[msg->id].push_back(*msg);
     // }
-
-
-    cout << "(" << msg->tl_x << "," << msg->tl_y << ") (" << msg->tr_x << "," << msg->tr_y << ")\n";
-    cout << "(" << msg->bl_x << "," << msg->bl_y << ") (" << msg->br_x << "," << msg->br_y << ")\n";
     cout << "ID: " << msg->id << " center: (" << msg->x << ", " << msg->y << ")\n";
 }
 
